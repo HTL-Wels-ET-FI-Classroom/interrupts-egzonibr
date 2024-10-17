@@ -43,7 +43,8 @@ void SysTick_Handler(void)
 void EXTI0_IRQHandler(void)
 {
 	 __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
-	 ChooseTimer = !ChooseTimer;
+	 ChooseTimer =ChooseTimer*(-1);
+	 HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_13);
 
 }
 	int main(void)
@@ -66,17 +67,18 @@ void EXTI0_IRQHandler(void)
 		LCD_SetBackColor(LCD_COLOR_BLACK);
 		LCD_SetFont(&Font20);
 		// There are 2 ways to print text to screen: using printf or LCD_* functions
-		LCD_DisplayStringAtLine(0, "    HTL Wels");
+		LCD_DisplayStringAtLine(0, "  Ibrahimi 4AHET");
 		// printf Alternative
 		LCD_SetPrintPosition(1, 0);
-		printf(" Fischergasse 30");
+		printf(" ---------------");
 		LCD_SetPrintPosition(2, 0);
-		printf("   A-4600 Wels");
+		printf(" EXTI Interrupt");
 
 		LCD_SetFont(&Font8);
 		LCD_SetColors(LCD_COLOR_MAGENTA, LCD_COLOR_BLACK); // TextColor, BackColor
 		LCD_DisplayStringAtLineMode(39, "copyright xyz", CENTER_MODE);
 
+		__HAL_RCC_GPIOA_CLK_ENABLE();
 		GPIO_InitTypeDef user;
 		user.Alternate = 0;
 		user.Mode = GPIO_MODE_IT_RISING;
@@ -85,9 +87,15 @@ void EXTI0_IRQHandler(void)
 		user.Speed = GPIO_SPEED_FAST;
 		HAL_GPIO_Init(GPIOA, &user);
 
-//		led.Pin = GPIO_PIN_13;
-//		HAL_GPIO_Init(GPIOG, &user);
 
+		__HAL_RCC_GPIOG_CLK_ENABLE();
+		GPIO_InitTypeDef pg13;
+		pg13.Alternate=0;
+		pg13.Mode=GPIO_MODE_OUTPUT_PP;
+		pg13.Pin=GPIO_PIN_13;
+		pg13.Pull=GPIO_NOPULL;
+		pg13.Speed=GPIO_SPEED_MEDIUM;
+		HAL_GPIO_Init(GPIOG, &pg13);
 		HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
 		int cnt = 0;
@@ -97,10 +105,9 @@ void EXTI0_IRQHandler(void)
 		{
 			//execute main loop every 100ms
 			HAL_Delay(100);
-
-			// display timer
 			cnt++;
 			cnt2++;
+			// display timer
 			LCD_SetFont(&Font20);
 			LCD_SetTextColor(LCD_COLOR_BLUE);
 			LCD_SetPrintPosition(5, 0);
@@ -108,9 +115,9 @@ void EXTI0_IRQHandler(void)
 			LCD_SetPrintPosition(7, 0);
 			printf("Other Timer: %.1f", cnt2/10.0);
 
-			if(ChooseTimer == 0){
+			if(ChooseTimer < 0){
 				cnt++;
-			}else if (ChooseTimer == 1) {
+			}else if (ChooseTimer > 0) {
 				cnt2++;
 			}
 			// test touch interface
